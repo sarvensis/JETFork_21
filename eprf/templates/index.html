@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Главная страница
+{% endblock %}
+
+{% block headbuttons %}
+    <div class="list-group">
+    </div>
+{% endblock %}
+
+{% load static %}
+
+{% block content %}
+    <h1>Форма ввода</h1>
+    <div>
+        <form onsubmit="singleCheck(this);return false" name="checkOne" id="formCheckOne">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="inputProductName" class="form-label">Общее наименование продукции</label>
+                <textarea class="form-control" id="inputProductName" name="excelFile" rows="3"></textarea>
+            </div>
+
+            <div class="mb-3" id="divProductName">
+                <label for="inputCategory" class="form-label">Выберите категорию</label>
+                <input class="form-control" list="dataListCategory" id="inputCategory"
+                       placeholder="Кликните, чтобы выбрать или начните вводить" name="inputCategory"
+                       onkeydown="return event.key != 'Enter';"
+                       onchange="listDatabaseFields()">
+                <div id="divProductNameMessages" class="m-2"></div>
+                <div>
+                    <datalist id="dataListCategory">
+                        {# TODO: Большое количество таблиц может вызвать временные задержки. #}
+                        {# Подумать над оптимизацией, возможно, вынести в отдельную страницу и там обновлять, либо использовать js  #}
+                        {% for c_filter in category_filters %}
+                            <option value="{{ c_filter.code }} {{ c_filter.text }}">
+                        {% endfor %}
+                    </datalist>
+                </div>
+
+                <div class="mb-3" id="divSubcroductName">
+                    <label for="inputSubcategory" class="form-label">Выберите подкатегорию</label>
+                    <input class="form-control" list="dataListSubcategory" id="inputSubcategory"
+                           placeholder="Нажмите, чтобы выбрать" name="tableName"
+                           onkeydown="return event.key != 'Enter';"
+                           onchange="">
+                    <datalist id="dataListSubcategory">
+                        {#          Сюда приходят варианты с метода get_subcategory_info#}
+                    </datalist>
+                </div>
+                <button type="submit" class="btn btn-primary mb-3" id="formCheckOneButton">
+                    Отправить
+                </button>
+        </form>
+    </div>
+    <hr class="md-4">
+    <div>
+        <h1>Поточная загрузка</h1>
+        <p>При загрузке данных необходимо использовать шаблон и не менять в нем колонки:</p>
+        <div class="row mb-3 mx-5 d-flex justify-content-around">
+            <div class="col-sm">
+                <a href="{% static 'template01.xlsx' %}"><img src="{% static 'xlsx_format_logo.png' %}" width="45dp" alt="Command logo">
+                Excel</a>
+            </div>
+            <div class="col-sm">
+                <a href="{% static 'template02.csv' %}">
+                <img src="{% static 'csv_format_logo.png' %}" width="45dp" alt="Command logo">
+                CSV</a>
+            </div>
+        </div>
+
+        <form action="{% url 'home' %}" enctype="multipart/form-data" method="post" target="_blank">
+            {% csrf_token %}
+            <label for="formFileLg" class="form-label">Прикрепить файл</label>
+            <div class="mb-3">
+                <input class="form-control mb-3" id="formFileLg" name="excelFile" type="file"
+                       accept=".csv, .xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                <button type="submit" class="btn btn-primary" name="report" value="html">Сформировать отчет</button>
+                <button type="submit" class="btn btn-primary" name="report" value="xlsx">Скачать xlsx</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        function listDatabaseFields() {
+            let selectCategory = document.getElementById('inputCategory').value;
+            let idCatecory = selectCategory.split(' ', 1)[0]
+            let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            let inputSubcategory = document.getElementById('inputSubcategory');
+            inputSubcategory.value = ''
+            let parent = document.getElementById('dataListSubcategory'); // Subcategory List
+            while (parent.firstChild) {
+                parent.removeChild(parent.firstChild);
+            }
+
+
+            let request = new Request(
+                'api/category/' + idCatecory,
+                {headers: {'X-CSRFToken': csrfToken}}
+            )
+            fetch(request)
+                .then((response) => {
+                    return response.json();
+                })
+                .then((data) => {
+                    {#Получаем данные#}
+                    let columnListByTable = data['subcategories']
+                    for (let i in columnListByTable) {
+                        let input = document.createElement('option');
+                        input.setAttribute('type', 'checkbox');
+                        input.setAttribute('value', `${columnListByTable[i]['sub_code']} ${columnListByTable[i]['text']}`);
+                        parent.appendChild(input)
+                    }
+                });
+        }
+
+        function singleCheck(formCheckOneData) {
+            let button = document.getElementById('formCheckOneButton');
+            console.log(button)
+            button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" id="formCheckOneButtonLoad"></span>Отправить';
+            let loader = document.getElementById('formCheckOneButtonLoad');
+            console.log(loader)
+            loader.hidden = false;
+            loader.removeAttribute('hidden')
+
+            let divProductNameMessages = document.getElementById('divProductNameMessages');
+            while (divProductNameMessages.firstChild) {
+                divProductNameMessages.removeChild(divProductNameMessages.firstChild);
+            }
+
+            let inputProductName = document.getElementById('inputProductName').value;
+            let inputCategory = document.getElementById('inputCategory').value;
+            let inputCategoryId = inputCategory.split(' ', 1)[0]
+            let inputSubcategory = document.getElementById('inputSubcategory').value;
+            let inputSubategoryId = inputSubcategory.split(' ', 1)[0]
+            sendData = {
+                'inputProductName': inputProductName,
+                'inputCategoryId': inputCategoryId,
+                'inputSubcategoryId': inputSubategoryId
+            }
+            console.log(sendData)
+
+            let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            let request = new Request(
+                '{% url 'single_check' %}',
+                {headers: {'X-CSRFToken': csrfToken}}
+            )
+
+            fetch(request, {
+                method: 'POST',
+                mode: 'same-origin',
+                body: JSON.stringify(sendData),
+            })
+                .then((response) => {
+                    return response.json();
+                })
+                .then((data) => {
+                    {#Получаем данные#}
+                    console.log(data)
+                    if (data['status'] == 'ok') {
+                        let result = data['result']
+                        let label_category_id = result['label_category_id']
+                        let label_category_text = result['label_category_text']
+                        let probability = result['probability']
+                        let is_equal = result['is_equal']
+                        let light = result['light']
+
+                        if (is_equal != true) {
+                            let category_hint = document.createElement('div');
+                            category_hint.setAttribute('role', 'alert');
+                            category_hint.setAttribute('class', 'alert alert-primary');
+                            category_hint.innerHTML = `Возможно, под это наименование подходит категория<br><b>${label_category_id} ${label_category_text}</b>?`
+                            divProductNameMessages.appendChild(category_hint);
+                        }
+
+                        console.log(label_category_id)
+                        console.log(label_category_text)
+                        console.log(probability)
+                        console.log(is_equal)
+                        console.log(light)
+
+                    } else {
+                        console.log(data)
+                    }
+                });
+            loader.setAttribute('hidden', '');
+            button.disabled = false;
+        }
+
+
+    </script>
+
+{% endblock %}

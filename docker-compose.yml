@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+
+  db:
+    image: "postgres:13.4-alpine"
+    ports:
+      - "5555:5432"
+    volumes:
+      - type: bind
+        source: /home/ivan/hackathon/postgres_data
+        target: /var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=developer
+      - POSTGRES_PASSWORD=k1hack
+      - POSTGRES_DB=dev
+    restart: on-failure

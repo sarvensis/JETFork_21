@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Главная страница
+{% endblock %}
+
+{% block headbuttons %}
+    <div class="list-group">
+        <div class="d-flex gap-2 w-100 justify-content-between m-1 rounded">
+            <h1>Подать заявку</h1>
+        </div>
+        <div class="d-flex gap-2 w-100 justify-content-between m-1 rounded">
+            <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading">Отличная работа!</h4>
+                <p>Вы успешно прочитали это важное сообщение. Это пример текста немного длиннее, так что вы увидите, как
+                    работают
+                    отступы в сообщениях уведомлений.Вы успешно прочитали это важное сообщение. Это пример текста
+                    немного длиннее,
+                    так что вы увидите, как работают отступы в сообщениях уведомлений.</p>
+                <hr>
+                <p class="mb-0">Если необходимо, используйте утилиты отступа для создания необходимых отступов.</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <h1>HI</h1>
+    <div>
+        <form action="{% url 'home' %}" enctype="multipart/form-data" method="post">
+            {% csrf_token %}
+            qweue
+        </form>
+    </div>
+    <div>
+        <form action="{% url 'home' %}" enctype="multipart/form-data" method="post">
+            {% csrf_token %}
+            <label for="formFileLg" class="form-label">Прикрепить файл</label>
+            <div class="mb-3">
+                <input class="form-control mb-3" id="formFileLg" name="excelFile" type="file"
+                       accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                <button type="submit" class="btn btn-primary">Отправить</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}
