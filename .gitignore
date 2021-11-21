@@ -128,3 +128,4 @@ templates/logo*.png
 *.whl
 *.csv
 *.bin
+eprf/migrations

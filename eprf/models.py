@@ -12,22 +12,6 @@ PRODUCT_STATUSES = [
     ('rejected', 'Отказано'),
 ]
 
-
-# class Category(models.Model):
-#     code = models.IntegerField("Код категории")
-#     text = models.TextField("Наименование категория продукции")
-#
-#     removed = models.BooleanField(default=False)
-#
-#
-# class Subcategory(models.Model):
-#     category_id = models.ForeignKey(Category, on_delete=models.CASCADE)
-#     code = models.IntegerField("Код подкатегории")
-#     text = models.TextField("Наименование категория продукции")
-#
-#     removed = models.BooleanField(default=False)
-
-
 class Category(models.Model):
     # code = models.IntegerField("Код категории")
     code = models.IntegerField("Код категории")
@@ -47,10 +31,6 @@ class Product(models.Model):
     name = models.TextField("Общее наименование продукции")
     upload = models.ForeignKey(Upload, on_delete=models.CASCADE)
 
-    # category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    # category_option = ArrayField(models.IntegerField(),
-    #                              default=None, null=True, blank=True)
-
     category_model_label = models.ForeignKey(Category, on_delete=models.CASCADE)
     category_probability = models.FloatField(null=True, blank=True)
     category_is_equal = models.BooleanField(null=True, blank=True, default=None)
@@ -61,25 +41,12 @@ class Product(models.Model):
     # is_equal - модель думает, что он совпал
     # light - светофор
 
-    # subcategory = models.ForeignKey(Subcategory, on_delete=models.CASCADE)
-    # subcategory_option = ArrayField(models.IntegerField(),
-    #                                 default=None, null=True, blank=True)
-
     status = models.CharField(choices=PRODUCT_STATUSES, max_length=64)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-# import pandas as pd
-# df = pd.read_excel('dict.xlsx')
-# df.iloc[:, 2].str.split(r';\s*', expand=True)
-# categories = df.iloc[:, 2].str.split(r';\s', n=1, expand=True)
-#
-#
-# codes = df.iloc[:, 2].str.split('.', n=1, expand=True)
-# df['category_code'] = codes[0].astype(int)
-# df['subcategory_code'] = codes[1].astype(int)
 
-
+# --- Чистка словарей ---
 # df1 = pd.read_csv('dictionary_level_2 (2).csv', sep=';')
 # df1['category'] = df1['category'].str.strip()
 # df1.drop_duplicates(subset=['level_2'], inplace=True)
